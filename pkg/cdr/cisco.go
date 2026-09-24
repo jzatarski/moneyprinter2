@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 
@@ -43,7 +44,13 @@ const (
 	// day_of_month, year."
 	//
 	// Example: "*19:16:54.886 UTC Fri Jun 14 2024"
-	CiscoTime = "*15:04:05.000 MST Mon Jan _2 2006"
+	CiscoTime = "15:04:05.000 MST Mon Jan _2 2006"
+)
+
+var (
+	// ciscoRegexpTime is used to get rid of the apparently-optional
+	// '*' at the beginning of a Cisco time.
+	ciscoRegexpTime = regexp.MustCompile(`^\*`)
 )
 
 // CiscoLegType identifies the record type that's been provided.
@@ -231,7 +238,7 @@ func (c *Cisco) strCiscoTimeToTime(s string) time.Time {
 		return time.Time{}
 	}
 
-	t, err := time.Parse(CiscoTime, s)
+	t, err := time.Parse(CiscoTime, ciscoRegexpTime.ReplaceAllString(s, ``))
 	if err != nil {
 		slog.Warn("Failed to parse time as CiscoTime", "time", s, "error", err)
 		return time.Time{}
