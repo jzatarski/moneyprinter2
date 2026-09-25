@@ -165,6 +165,9 @@ type Cisco struct{}
 // return a slice of strongly typed Cisco-style CDRs.
 func (c *Cisco) Parse(r io.Reader, clli string) ([]types.CDR, error) {
 	cReader := csv.NewReader(r)
+	// normal records are 35 fields, sometimes they're short
+	cReader.FieldsPerRecord = 35
+	
 	out := []types.CDR{}
 
 	for {
@@ -175,6 +178,8 @@ func (c *Cisco) Parse(r io.Reader, clli string) ([]types.CDR, error) {
 		if err != nil {
 			slog.Warn("Error reading CSV", "error", err)
 			if len(record) == 1 {
+				// if IOS flushes an empty CDR buffer, it emits
+				// just the UnixTime field and no others
 				continue
 			}
 			return nil, err
