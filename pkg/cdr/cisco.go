@@ -220,6 +220,10 @@ func (c *Cisco) Parse(r io.Reader, clli string) ([]types.CDR, error) {
 		if cdr.H323DisconnectTime.Sub(cdr.H323ConnectTime) == 0 {
 			continue
 		}
+		
+		if cdr.H323CallOrigin == "originate" {
+			continue // originate records aren't the ones we want
+		}
 
 		slog.Debug("Original Cisco CDR", "data", cdr)
 
